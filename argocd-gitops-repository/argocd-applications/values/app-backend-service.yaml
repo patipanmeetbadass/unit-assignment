@@ -1,0 +1,32 @@
+argocd-apps:
+  applications:
+    # Application list
+    backend-service:
+      # ArgoCD server's namespace
+      namespace: argocd
+      project: microservices
+      source:
+        # Repository of helm template
+        repoURL: https://github.com/argoproj/application-template-repository.git
+        targetRevision: main
+        # Directory to template.yaml file
+        path: backend-service-template
+      destination:
+        # Local kube cluster as ArgoCD server
+        server: https://kubernetes.default.svc
+        namespace: poc
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: false
+        syncOptions:
+        # Create namespace 'poc'
+        # Create the namespace specified in spec.destination.namespace
+        - CreateNamespace=true
+      revisionHistoryLimit: null
+      # Ignore the spec.replicas field from the desired state (git) during the sync stage
+      ignoreDifferences:
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+        - /spec/replicas

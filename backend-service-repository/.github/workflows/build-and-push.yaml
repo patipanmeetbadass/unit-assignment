@@ -1,0 +1,63 @@
+name: build-and-push
+
+env:
+  ENVIRONMENT_NAME: poc
+
+on:
+  push:
+    tags:
+      - 'v*'  # This triggers when a new tag like 'v1.0.0' is pushed
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    outputs:
+      latest_tag: ${{ steps.get-latest-tag.outputs.LATEST_TAG }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Get latest tag
+      - name: Get Tag
+        id: latest-tag
+        run: |
+          echo "LATEST_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n 1)" >> $GITHUB_ENV
+          echo "Latest tag starting with 'v' is $LATEST_TAG"
+
+      # Get ECR repo name  based on this repo name = poc-backend-service
+      - name: Get ECR repo name
+        shell: bash
+        run: |
+          set -eux
+          # lowercase the name
+          repo="${GITHUB_REPOSITORY,,}"
+          # replace / with _
+          echo "ECR_REPO_NAME=${repo//\//_}" >> $GITHUB_ENV
+
+      # Login to ECR with aws account id 12-digit stored in a secret
+      - name: ECR login
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registries: ${{ secrets.AWS_ACCOUNT_ID }}
+
+      # Build docker image and push to ECR
+      # Docker image tag will be 'poc-backend-service:1.0.3-beta.5'
+      - name: Build and push
+        id: build-publish
+        shell: bash
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPO_NAME }}
+          IMAGE_TAG: ${{ env.LATEST_TAG }}
+          FULL_IMAGE: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        run: |
+          echo "image_tag=$IMAGE_TAG"
+          echo "full_image=$FULL_IMAGE"
+
+          docker build -t "$FULL_IMAGE"
+          docker push "$FULL_IMAGE"
+          echo "IMAGE $IMAGE_TAG is pushed to $FULL_IMAGE"
+
+          # Cleas workspace
+          docker rmi "$FULL_IMAGE"

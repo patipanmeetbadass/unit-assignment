@@ -1,0 +1,12 @@
+minio:
+  enabled: true
+  mode: standalone
+  persistence:
+    size: 256Mi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+gateway:
+  enabled: true

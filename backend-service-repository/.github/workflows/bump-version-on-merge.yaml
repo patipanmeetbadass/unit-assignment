@@ -1,0 +1,36 @@
+# github-tag-action
+# Automatically bump and tag main, on merge, with the latest SemVer formatted version.
+name: bump-version-on-merge
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+    # To avoide this workflow triggered, change from 'main' to 'change-this-to-main' as a temp
+      - change-this-to-main
+
+jobs:
+  bump-version-on-merge:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.merge_commit_sha }}
+        fetch-depth: '0'
+
+    - name: Bump
+      # Don't use @main or @v1 unless you're happy to test the latest version
+      uses: anothrNick/github-tag-action@1.71.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.POC_SECRET_GH_PAT_B }}
+        DEFAULT_BUMP: patch
+        WITH_V: true
+        PRERELEASE: true
+
+    - name: Verify
+      run: |
+        echo "Building and pushing image for tag: ${{ steps.bump.new_tag }}"

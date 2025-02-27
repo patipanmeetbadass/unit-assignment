@@ -1,0 +1,33 @@
+persistence.enabled: true
+persistence.size: 256Mi
+persistence.existingClaim: grafana-pvc
+persistence.accessModes[0]: ReadWriteOnce
+persistence.storageClassName: standard
+  
+adminUser: admin
+adminPassword: grafana
+
+datasources: 
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        orgId: 1
+        url: http://loki-gateway.monitoring.svc.cluster.local
+        basicAuth: false
+        isDefault: true
+        version: 1
+        editable: false
+      - name: Mimir
+        type: prometheus
+        access: proxy
+        url: http://mimir-gateway.monitoring.svc.cluster.local:80/prometheus
+        isDefault: false
+        jsonData:
+          httpMethod: "POST"
+          prometheusType: "Mimir"
+          prometheusVersion: "2.9.1"
+          tlsSkipVerify: true
+          timeout: 30```

@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  # Define the Google Chat service
+  service.google-chat: |
+    url: $argocd-notifications-secret:google-chat-webhook
+    headers:
+      Content-Type: application/json
+    method: POST
+    body: |
+      {
+        "text": "{{ .message }}"
+      }
+
+  # Define event-based notification templates
+  template.app-sync-succeeded: |
+    message: |
+      *Sync Succeeded*
+      Application: *{{ .app.metadata.name }}*
+      Namespace: *{{ .app.spec.destination.namespace }}*
+      Revision: *{{ .app.status.sync.revision }}*
+
+  template.app-sync-failed: |
+    message: |
+      *Sync Failed*
+      Application: *{{ .app.metadata.name }}*
+      Namespace: *{{ .app.spec.destination.namespace }}*
+      Error: *{{ index .app.status.conditions 0 "message" }}*
+
+  template.app-degraded: |
+    message: |
+      *Application Degraded*
+      Application: *{{ .app.metadata.name }}*
+      Namespace: *{{ .app.spec.destination.namespace }}*
+      Health Status: *{{ .app.status.health.status }}*
+
+  # Subscription to trigger notifications
+  trigger.on-sync-succeeded: |
+    - description: Application sync succeeded
+      oncePer: app.status.sync.revision
+      send:
+        - google-chat
+      when: app.status.sync.status == 'Synced'
+
+  trigger.on-sync-failed: |
+    - description: Application sync failed
+      send:
+        - google-chat
+      when: app.status.operationState.phase in ['Error', 'Failed']
+
+  trigger.on-app-degraded: |
+    - description: Application is degraded
+      send:
+        - google-chat
+      when: app.status.health.status == 'Degraded'
+
+  # Subscribe notifications to applications
+  subscription: |
+    - recipients:
+        - google-chat
+      triggers:
+        - on-sync-succeeded
+        - on-sync-failed
+        - on-app-degraded
