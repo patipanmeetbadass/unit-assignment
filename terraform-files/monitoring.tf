@@ -70,8 +70,8 @@ resource "helm_release" "tempo-distributed" {
 resource "helm_release" "mimir-distributed" {
     name       = "mimir-distributed"
     chart      = "mimir-distributed"
-    version    = "mimir-distributed-5.4.0"
-    repository = var.mimir_helm_chart_repository
+    version    = "4.4.1"
+    repository = var.grafana_helm_chart_repository
     namespace  = var.monitoring_namespace
 
     values     = [file("${path.module}/values/mimir-distributed.yaml")]

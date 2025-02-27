@@ -98,10 +98,6 @@ variable "grafana_helm_chart_repository" {
     type = string
     default = "https://grafana.github.io/helm-charts"
 }
-variable "grafana_helm_chart_repository" {
-    type = string
-    default = "https://grafana.github.io/helm-charts"
-}
 variable "prometheus_helm_chart_repository" {
     type = string
     default = "https://prometheus-community.github.io/helm-charts"
