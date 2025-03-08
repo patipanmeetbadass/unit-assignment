@@ -16,7 +16,7 @@
 - Set default bump version to patch and 'v' char. as a tag prefix
 - So, tag will increases as v1.0.3-beta.5, v1.0.3-beta.6, v1.0.3-beta.7 and so on
 
-# .github/workflows/trigger-on-tag-main.yaml
+# .github/workflows/build-and-push.yaml
 - This workflow will be triggered after tagging 'main' branch with prefix 'v' is done
 - After check out, step 'Get Tag' will get the latest git tag of the repository to taggin docker image
 - Step 'Get ECR repo name', get ECR repository name which is corresponding to the repository name storing this workflow
